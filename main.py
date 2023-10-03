@@ -88,6 +88,7 @@ class FileExplorer:
                 checked_value = "X" if item_path in self.checked_items else ""
                 if os.path.isdir(item_path):
                     progress = f"{self.calculate_progress(item_path):.2f}%"
+                    checked_value = "X" if self.calculate_progress(item_path) == 100.0 else ""
                     self.tree.insert("", "end", text="", values=(item_name, "Folder", checked_value, progress), open=True)
                 else:
                     self.tree.insert("", "end", text="", values=(item_name, "File", checked_value, ""), open=True)
@@ -113,17 +114,41 @@ class FileExplorer:
 
     def check_item(self):
         item = self.tree.selection()[0]
-        item_path = os.path.join(self.current_folder, self.tree.item(item, "values")[0])
-        self.checked_items.add(item_path)
+        item_name, item_type = self.tree.item(item, "values")[:2]
+        item_path = os.path.join(self.current_folder, item_name)
+        
+        if item_type == "File":
+            if item_name.endswith(FILE_TYPE):
+                self.checked_items.add(item_path)
+                self.tree.set(item, column="Checked", value="X")
+        elif item_type == "Folder":
+            for root, dirs, files in os.walk(item_path):
+                for file in files:
+                    if file.endswith(FILE_TYPE):
+                        file_path = os.path.join(root, file)
+                        self.checked_items.add(file_path)
+        
         self.save_checked_items()
-        self.tree.set(item, column="Checked", value="X")
+        self.show_folder_contents(self.current_folder)  # Refresh the tree view to reflect changes
+
 
     def uncheck_item(self):
         item = self.tree.selection()[0]
-        item_path = os.path.join(self.current_folder, self.tree.item(item, "values")[0])
-        self.checked_items.discard(item_path)
+        item_name, item_type = self.tree.item(item, "values")[:2]
+        item_path = os.path.join(self.current_folder, item_name)
+        
+        if item_type == "File":
+            if item_name.endswith(FILE_TYPE):
+                self.checked_items.discard(item_path)
+                self.tree.set(item, column="Checked", value="")
+        elif item_type == "Folder":
+            for root, dirs, files in os.walk(item_path):
+                for file in files:
+                    if file.endswith(FILE_TYPE):
+                        file_path = os.path.join(root, file)
+                        self.checked_items.discard(file_path)
         self.save_checked_items()
-        self.tree.set(item, column="Checked", value="")
+        self.show_folder_contents(self.current_folder)  # Refresh the tree view to reflect changes
 
     def navigate_up(self):
         parent_folder = os.path.dirname(self.current_folder)
