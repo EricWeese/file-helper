@@ -3,6 +3,7 @@ import tkinter as tk
 from tkinter import ttk
 
 FILE_TYPE = ".txt"
+FILE_PATH = "C:\\Users\\eric.weese\\Documents\\Projects\\Python Test\\FileTracker\\root"
 
 class FileExplorer:
     def __init__(self, root):
@@ -45,7 +46,7 @@ class FileExplorer:
         self.checked_items_file = "checked_items.txt"
         self.checked_items = self.load_checked_items()
 
-        self.set_root_folder("C:\\Users\\eric.weese\\Documents\\Projects\\Python Test\\FileTracker\\root")
+        self.set_root_folder(FILE_PATH)
 
     def load_checked_items(self):
         if os.path.exists(self.checked_items_file):
@@ -91,7 +92,8 @@ class FileExplorer:
                     checked_value = "X" if self.calculate_progress(item_path) == 100.0 else ""
                     self.tree.insert("", "end", text="", values=(item_name, "Folder", checked_value, progress), open=True)
                 else:
-                    self.tree.insert("", "end", text="", values=(item_name, "File", checked_value, ""), open=True)
+                    if(item_name.endswith(FILE_TYPE)):
+                        self.tree.insert("", "end", text="", values=(item_name, "File", checked_value, ""), open=True)
         except PermissionError:
             pass
 
@@ -103,6 +105,8 @@ class FileExplorer:
         if item_type == "Folder":
             self.current_folder = os.path.join(self.current_folder, item_name)
             self.show_folder_contents(self.current_folder)
+        elif item_type == "File":
+            os.startfile(os.path.join(self.current_folder, item_name))
 
     def on_right_click(self, event):
         item = self.tree.identify_row(event.y)
