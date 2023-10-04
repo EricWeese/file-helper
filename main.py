@@ -1,9 +1,15 @@
 import os
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, filedialog
 
 FILE_TYPE = ".txt"
 FILE_PATH = "C:\\Users\\eric.weese\\Documents\\Projects\\Python Test\\FileTracker\\root"
+
+# test = filedialog.askdirectory()
+# print(test)
+# test2 = test.replace("/", "\\")
+# print(test2)
+
 
 class FileExplorer:
     def __init__(self, root):
@@ -14,6 +20,9 @@ class FileExplorer:
         self.frame = ttk.Frame(self.root)
         self.frame.pack(fill="both", expand=True)
 
+        self.back_button = ttk.Button(self.frame, text="Up Folder", command=self.navigate_up)
+        self.back_button.pack(side="top",anchor="w")
+
         self.tree = ttk.Treeview(self.frame, columns=("Name", "Type", "Checked", "Progress"))
         self.tree.pack(fill="both", expand=True, side="left")
 
@@ -23,9 +32,9 @@ class FileExplorer:
 
         self.tree.column("#0", width=0, stretch="no")
         self.tree.column("Name", anchor="w", width=400)
-        self.tree.column("Type", anchor="w", width=100)
-        self.tree.column("Checked", width=100)
-        self.tree.column("Progress", width=100)
+        self.tree.column("Type", anchor="w", width=50, stretch="no")
+        self.tree.column("Checked", width=75, stretch="no")
+        self.tree.column("Progress", width=75, stretch="no")
 
         self.tree.heading("#0", text="", anchor="w")
         self.tree.heading("Name", text="Name", anchor="w")
@@ -35,9 +44,6 @@ class FileExplorer:
 
         self.tree.bind("<Double-1>", self.on_item_double_click)
         self.tree.bind("<Button-3>", self.on_right_click)
-
-        self.back_button = ttk.Button(self.root, text="Back", command=self.navigate_up)
-        self.back_button.pack(side="top")
 
         self.context_menu = tk.Menu(self.root, tearoff=0)
         self.context_menu.add_command(label="Check", command=self.check_item)
