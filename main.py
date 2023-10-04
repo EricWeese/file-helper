@@ -23,7 +23,7 @@ class FileExplorer:
         self.back_button = ttk.Button(self.frame, text="Up Folder", command=self.navigate_up)
         self.back_button.pack(side="top",anchor="w")
 
-        self.tree = ttk.Treeview(self.frame, columns=("Name", "Type", "Checked", "Progress"))
+        self.tree = ttk.Treeview(self.frame, columns=("Name", "Type", "Checked", "Number", "Progress"))
         self.tree.pack(fill="both", expand=True, side="left")
 
         self.scrollbar = ttk.Scrollbar(self.frame, orient="vertical", command=self.tree.yview)
@@ -34,12 +34,14 @@ class FileExplorer:
         self.tree.column("Name", anchor="w", width=400)
         self.tree.column("Type", anchor="w", width=50, stretch="no")
         self.tree.column("Checked", width=75, stretch="no")
+        self.tree.column("Number", width=75, stretch="no")
         self.tree.column("Progress", width=75, stretch="no")
 
         self.tree.heading("#0", text="", anchor="w")
         self.tree.heading("Name", text="Name", anchor="w")
         self.tree.heading("Type", text="Type", anchor="w")
         self.tree.heading("Checked", text="Checked", anchor="w")
+        self.tree.heading("Number", text="Number", anchor="w")
         self.tree.heading("Progress", text="Progress", anchor="w")
 
         self.tree.bind("<Double-1>", self.on_item_double_click)
@@ -83,7 +85,7 @@ class FileExplorer:
                     total_files += 1
                     if os.path.join(root, file) in self.checked_items:
                         checked_files += 1
-        return (checked_files / total_files) * 100 if total_files != 0 else 0
+        return total_files, (checked_files / total_files) * 100 if total_files != 0 else 0
 
     def show_folder_contents(self, path):
         for item in self.tree.get_children():
@@ -94,12 +96,13 @@ class FileExplorer:
                 item_path = os.path.join(path, item_name)
                 checked_value = "X" if item_path in self.checked_items else ""
                 if os.path.isdir(item_path):
-                    progress = f"{self.calculate_progress(item_path):.2f}%"
+                    total_files, progress = self.calculate_progress(item_path)
+                    progress = f"{progress:.2f}%"
                     checked_value = "X" if self.calculate_progress(item_path) == 100.0 else ""
-                    self.tree.insert("", "end", text="", values=(item_name, "Folder", checked_value, progress), open=True)
+                    self.tree.insert("", "end", text="", values=(item_name, "Folder", checked_value, total_files, progress), open=True)
                 else:
                     if(item_name.endswith(FILE_TYPE)):
-                        self.tree.insert("", "end", text="", values=(item_name, "File", checked_value, ""), open=True)
+                        self.tree.insert("", "end", text="", values=(item_name, "File", checked_value, "", ""), open=True)
         except PermissionError:
             pass
 
