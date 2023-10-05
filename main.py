@@ -30,7 +30,7 @@ class FileExplorer:
         self.back_button = ttk.Button(self.frame, text="Up Folder", command=self.navigate_up)
         self.back_button.pack(side="top",anchor="w")
 
-        self.tree = ttk.Treeview(self.frame, columns=("Name", "Type", "Checked", "Number", "Progress"))
+        self.tree = ttk.Treeview(self.frame, columns=("Name", "Type", "Watched", "Total Number", "Progress"))
         self.tree.pack(fill="both", expand=True, side="left")
 
         self.scrollbar = ttk.Scrollbar(self.frame, orient="vertical", command=self.tree.yview)
@@ -40,15 +40,15 @@ class FileExplorer:
         self.tree.column("#0", width=0, stretch="no")
         self.tree.column("Name", anchor="w", width=400)
         self.tree.column("Type", anchor="w", width=50, stretch="no")
-        self.tree.column("Checked", width=75, stretch="no")
-        self.tree.column("Number", width=75, stretch="no")
+        self.tree.column("Watched", width=75, stretch="no")
+        self.tree.column("Total Number", width=100, stretch="no")
         self.tree.column("Progress", width=75, stretch="no")
 
         self.tree.heading("#0", text="", anchor="w")
         self.tree.heading("Name", text="Name", anchor="w")
         self.tree.heading("Type", text="Type", anchor="w")
-        self.tree.heading("Checked", text="Checked", anchor="w")
-        self.tree.heading("Number", text="Number", anchor="w")
+        self.tree.heading("Watched", text="Watched", anchor="w")
+        self.tree.heading("Total Number", text="Total Number", anchor="w")
         self.tree.heading("Progress", text="Progress", anchor="w")
 
         self.tree.bind("<Double-1>", self.on_item_double_click)
@@ -58,8 +58,8 @@ class FileExplorer:
         self.context_menu.add_command(label="Check", command=self.check_item)
         self.context_menu.add_command(label="Uncheck", command=self.uncheck_item)
 
-        self.checked_items_file = "checked_items.txt"
-        self.checked_items = self.load_checked_items()
+        self.watched_items_file = "watched_items.txt"
+        self.watched_items = self.load_watched_items()
 
         self.config = "config.txt"
 
@@ -72,15 +72,15 @@ class FileExplorer:
         with open('config.txt', 'w') as config_file:
             config_file.write(f'rootDirectory=\"{folder_selected}\"')
 
-    def load_checked_items(self):
-        if os.path.exists(self.checked_items_file):
-            with open(self.checked_items_file, 'r') as file:
+    def load_watched_items(self):
+        if os.path.exists(self.watched_items_file):
+            with open(self.watched_items_file, 'r') as file:
                 return set(file.read().splitlines())
         return set()
 
-    def save_checked_items(self):
-        with open(self.checked_items_file, 'w') as file:
-            file.write('\n'.join(self.checked_items))
+    def save_watched_items(self):
+        with open(self.watched_items_file, 'w') as file:
+            file.write('\n'.join(self.watched_items))
 
     def set_root_folder(self, path):
         with open(self.config, 'r') as file:
@@ -91,14 +91,14 @@ class FileExplorer:
 
     def calculate_progress(self, path):
         total_files = 0
-        checked_files = 0
+        watched_files = 0
         for root, dirs, files in os.walk(path):
             for file in files:
                 if file.endswith(FILE_TYPE):
                     total_files += 1
-                    if os.path.join(root, file) in self.checked_items:
-                        checked_files += 1
-        return total_files, (checked_files / total_files) * 100 if total_files != 0 else 0
+                    if os.path.join(root, file) in self.watched_items:
+                        watched_files += 1
+        return total_files, (watched_files / total_files) * 100 if total_files != 0 else 0
 
     def show_folder_contents(self, path):
         for item in self.tree.get_children():
@@ -107,17 +107,16 @@ class FileExplorer:
         try:
             for item_name in os.listdir(path):
                 item_path = os.path.join(path, item_name)
-                checked_value = "X" if item_path in self.checked_items else ""
+                watched_value = "X" if item_path in self.watched_items else ""
                 if os.path.isdir(item_path):
                     total_files, progress = self.calculate_progress(item_path)
                     total_files = f"{total_files}"
                     progress = f"{progress:.2f}%"
-                    checked_value = "X" if progress == "100.00%" else ""
-                    print(progress)
-                    self.tree.insert("", "end", text="", values=(item_name, "Folder", checked_value, total_files, progress), open=True)
+                    watched_value = "X" if progress == "100.00%" else ""
+                    self.tree.insert("", "end", text="", values=(item_name, "Folder", watched_value, total_files, progress), open=True)
                 else:
                     if(item_name.endswith(FILE_TYPE)):
-                        self.tree.insert("", "end", text="", values=(item_name, "File", checked_value, "", ""), open=True)
+                        self.tree.insert("", "end", text="", values=(item_name, "File", watched_value, "", ""), open=True)
         except PermissionError:
             pass
 
@@ -147,16 +146,16 @@ class FileExplorer:
         
         if item_type == "File":
             if item_name.endswith(FILE_TYPE):
-                self.checked_items.add(item_path)
-                self.tree.set(item, column="Checked", value="X")
+                self.watched_items.add(item_path)
+                self.tree.set(item, column="Watched", value="X")
         elif item_type == "Folder":
             for root, dirs, files in os.walk(item_path):
                 for file in files:
                     if file.endswith(FILE_TYPE):
                         file_path = os.path.join(root, file)
-                        self.checked_items.add(file_path)
+                        self.watched_items.add(file_path)
         
-        self.save_checked_items()
+        self.save_watched_items()
         self.show_folder_contents(self.current_folder)  # Refresh the tree view to reflect changes
 
 
@@ -167,15 +166,15 @@ class FileExplorer:
         
         if item_type == "File":
             if item_name.endswith(FILE_TYPE):
-                self.checked_items.discard(item_path)
-                self.tree.set(item, column="Checked", value="")
+                self.watched_items.discard(item_path)
+                self.tree.set(item, column="Watched", value="")
         elif item_type == "Folder":
             for root, dirs, files in os.walk(item_path):
                 for file in files:
                     if file.endswith(FILE_TYPE):
                         file_path = os.path.join(root, file)
-                        self.checked_items.discard(file_path)
-        self.save_checked_items()
+                        self.watched_items.discard(file_path)
+        self.save_watched_items()
         self.show_folder_contents(self.current_folder)  # Refresh the tree view to reflect changes
 
     def navigate_up(self):
