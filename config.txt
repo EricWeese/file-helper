@@ -1,1 +1,2 @@
-rootDirectory="C:\Users\eric.weese\Documents\Projects\Python Test\FileTracker\root"
+rootDirectory=C:\Users\eric.weese\Documents\Projects\Python Test\FileTracker\root
+fileTypes=('.txt',)
