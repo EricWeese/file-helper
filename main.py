@@ -1,14 +1,10 @@
 import os
 import tkinter as tk
 from tkinter import ttk, filedialog
+import getpass
 
 FILE_TYPE = ".txt"
 FILE_PATH = "C:\\Users\\eric.weese\\Documents\\Projects\\Python Test\\FileTracker\\root"
-
-# test = filedialog.askdirectory()
-# print(test)
-# test2 = test.replace("/", "\\")
-# print(test2)
 
 
 class FileExplorer:
@@ -29,6 +25,8 @@ class FileExplorer:
 
         self.back_button = ttk.Button(self.frame, text="Up Folder", command=self.navigate_up)
         self.back_button.pack(side="top",anchor="w")
+
+        #self.file_path_text = tk.Label(self.frame, text)
 
         self.tree = ttk.Treeview(self.frame, columns=("Name", "Type", "Watched", "Total Number", "Progress"))
         self.tree.pack(fill="both", expand=True, side="left")
@@ -63,14 +61,23 @@ class FileExplorer:
 
         self.config = "config.txt"
 
-        self.set_root_folder(FILE_PATH)
+        self.read_root_folder()
     
     def set_directory(self):
-        folder_selected = filedialog.askdirectory()
-        folder_selected = folder_selected.replace("/", "\\")
-        print(folder_selected)
-        with open('config.txt', 'w') as config_file:
-            config_file.write(f'rootDirectory=\"{folder_selected}\"')
+        try:
+            folder_selected = filedialog.askdirectory()
+            folder_selected = folder_selected.replace("/", "\\")
+            print(folder_selected)
+            if folder_selected == "":
+                raise 
+            with open('config.txt', 'w') as config_file:
+                config_file.write(f'rootDirectory=\"{folder_selected}\"')
+        except:
+            folder_selected = self.current_folder
+        finally:
+            self.root_folder = folder_selected
+            self.current_folder = folder_selected
+            self.show_folder_contents(folder_selected)
 
     def load_watched_items(self):
         if os.path.exists(self.watched_items_file):
@@ -82,12 +89,21 @@ class FileExplorer:
         with open(self.watched_items_file, 'w') as file:
             file.write('\n'.join(self.watched_items))
 
-    def set_root_folder(self, path):
-        with open(self.config, 'r') as file:
-            path = file.read().split("\"")[1]
-        self.root_folder = path
-        self.current_folder = path
-        self.show_folder_contents(path)
+    def read_root_folder(self):
+        try:
+            
+            with open(self.config, 'r') as file:
+                path = file.read().split("\"")[1]
+            if path == "":
+                raise 
+        except:
+            # Sets default path to C:\Users\{current user}\Videos
+            path = f"C:\\Users\\{getpass.getuser()}\\Videos"
+        finally:
+            print(path)
+            self.root_folder = path
+            self.current_folder = path
+            self.show_folder_contents(path)
 
     def calculate_progress(self, path):
         total_files = 0
