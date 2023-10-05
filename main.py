@@ -1,6 +1,7 @@
 import os
 import tkinter as tk
 from tkinter import ttk, filedialog
+from tkinter import *
 import getpass
 
 FILE_TYPE = ".txt"
@@ -22,11 +23,13 @@ class FileExplorer:
         self.file_menu = tk.Menu(self.menu_bar, tearoff=0)
         self.menu_bar.add_cascade(label="File", menu=self.file_menu)
         self.file_menu.add_command(label="Set Root Directory", command=self.set_directory)
+        
+        self.filePathText = StringVar()
+        self.file_path_text = Label(self.frame, textvariable=self.filePathText)
+        self.file_path_text.pack(side="top", anchor="w")
 
         self.back_button = ttk.Button(self.frame, text="Up Folder", command=self.navigate_up)
         self.back_button.pack(side="top",anchor="w")
-
-        #self.file_path_text = tk.Label(self.frame, text)
 
         self.tree = ttk.Treeview(self.frame, columns=("Name", "Type", "Watched", "Total Number", "Progress"))
         self.tree.pack(fill="both", expand=True, side="left")
@@ -56,18 +59,20 @@ class FileExplorer:
         self.context_menu.add_command(label="Check", command=self.check_item)
         self.context_menu.add_command(label="Uncheck", command=self.uncheck_item)
 
+        
+
         self.watched_items_file = "watched_items.txt"
         self.watched_items = self.load_watched_items()
 
         self.config = "config.txt"
 
-        self.read_root_folder()
+        self.filePathText.set(self.read_root_folder())
+
     
     def set_directory(self):
         try:
             folder_selected = filedialog.askdirectory()
             folder_selected = folder_selected.replace("/", "\\")
-            print(folder_selected)
             if folder_selected == "":
                 raise 
             with open('config.txt', 'w') as config_file:
@@ -104,6 +109,7 @@ class FileExplorer:
             self.root_folder = path
             self.current_folder = path
             self.show_folder_contents(path)
+            return path
 
     def calculate_progress(self, path):
         total_files = 0
@@ -121,6 +127,7 @@ class FileExplorer:
             self.tree.delete(item)
 
         try:
+            self.filePathText.set(path)
             for item_name in os.listdir(path):
                 item_path = os.path.join(path, item_name)
                 watched_value = "X" if item_path in self.watched_items else ""
