@@ -3,10 +3,7 @@ import tkinter as tk
 from tkinter import ttk, filedialog
 from tkinter import *
 import getpass
-
-FILE_TYPE = ".txt"
-FILE_PATH = "C:\\Users\\eric.weese\\Documents\\Projects\\Python Test\\FileTracker\\root"
-
+import re
 
 class FileExplorer:
     def __init__(self, root):
@@ -23,6 +20,8 @@ class FileExplorer:
         self.file_menu = tk.Menu(self.menu_bar, tearoff=0)
         self.menu_bar.add_cascade(label="File", menu=self.file_menu)
         self.file_menu.add_command(label="Set Root Directory", command=self.set_directory)
+        self.file_menu.add_command(label="Add File Type", command=self.add_file_type_window)
+        self.file_menu.add_command(label="Clear All File Types", command=self.clear_file_types)
         
         self.filePathText = StringVar()
         self.file_path_text = Label(self.frame, textvariable=self.filePathText)
@@ -63,24 +62,73 @@ class FileExplorer:
         self.context_menu.add_command(label="Check", command=self.check_item)
         self.context_menu.add_command(label="Uncheck", command=self.uncheck_item)
 
-        
-
         self.watched_items_file = "watched_items.txt"
         self.watched_items = self.load_watched_items()
 
         self.config = "config.txt"
+        self.root_folder = ""
+        self.current_folder = ""
 
+        self.file_types = ("",)
+        self.read_file_types()
         self.filePathText.set(self.read_root_folder())
 
+    def clear_file_types(self):
+        try:
+            self.file_types = (" ",)
+            with open(self.config, 'r') as file:
+                content = file.read()
+            new_content = re.sub(r'fileTypes=\(.*\)', f'fileTypes=', content)
+            with open(self.config, 'w') as file:
+                file.write(new_content)
+        except Exception as e:
+                print(f"Error: {e}")
+        self.show_folder_contents(self.current_folder)
+    def add_file_types(self):
+        new_file_type = self.file_type_entry.get()
+        if new_file_type:
+            new_file_type = new_file_type if new_file_type.startswith('.') else '.' + new_file_type
+            self.file_types += (new_file_type,)
+            try:
+                with open(self.config, 'r') as file:
+                    content = file.read()
+                new_content = re.sub(r'fileTypes=.*', f'fileTypes={self.file_types}', content)
+                with open(self.config, 'w') as file:
+                    file.write(new_content)
+            except Exception as e:
+                print(f"Error: {e}")
+        self.new_window.destroy()
+        self.show_folder_contents(self.current_folder)
+
     
+    def add_file_type_window(self):
+        self.new_window = tk.Toplevel(self.root)
+        self.new_window.title("Add File Type")
+        
+        label = tk.Label(self.new_window, text="What file type would you like to add?\n(ex: py, .txt, mp4)")
+        label.pack(pady=10)
+        
+        self.file_type_entry = tk.Entry(self.new_window)
+        self.file_type_entry.pack(pady=10)
+        
+        add_button = tk.Button(self.new_window, text="Add", command=self.add_file_types)
+        add_button.pack(pady=10)
+
+
     def set_directory(self):
         try:
             folder_selected = filedialog.askdirectory()
             folder_selected = folder_selected.replace("/", "\\")
             if folder_selected == "":
                 raise 
-            with open('config.txt', 'w') as config_file:
-                config_file.write(f'rootDirectory=\"{folder_selected}\"')
+            config_lines = []
+            with open(self.config, 'r') as file:
+                lines = file.readlines()
+                config_lines = [line for line in lines if not line.startswith("rootDirectory=")]
+            config_lines.append(f"rootDirectory={folder_selected}\n")
+            print(config_lines)
+            with open(self.config, 'w') as config_file:
+                config_file.writelines(config_lines)
         except:
             folder_selected = self.current_folder
         finally:
@@ -98,11 +146,27 @@ class FileExplorer:
         with open(self.watched_items_file, 'w') as file:
             file.write('\n'.join(self.watched_items))
 
+    def read_file_types(self):
+        try:
+            with open(self.config, 'r') as file:
+                for line in file.read().split("\n"):
+                    if line.startswith("fileTypes="):
+                        types = line.split("=")[1]
+                        types = re.findall(r"\.\w*", types)
+            if types == "":
+                raise 
+        except:
+            types = ()
+        finally:
+            self.file_types = tuple(types)
+            print(self.file_types)
+
     def read_root_folder(self):
         try:
-            
             with open(self.config, 'r') as file:
-                path = file.read().split("\"")[1]
+                for line in file.read().split("\n"):
+                    if line.startswith("rootDirectory"):
+                        path = line.split("=")[1]
             if path == "":
                 raise 
         except:
@@ -119,7 +183,7 @@ class FileExplorer:
         watched_files = 0
         for root, dirs, files in os.walk(path):
             for file in files:
-                if file.endswith(FILE_TYPE):
+                if file.endswith(self.file_types):
                     total_files += 1
                     if os.path.join(root, file) in self.watched_items:
                         watched_files += 1
@@ -147,7 +211,7 @@ class FileExplorer:
                     self.tree.insert("", "end", text="", values=(item_name, "Folder", watched_value, f"{watched_files}/{total_files}", progress), open=True, tags=completed)
                 else: # File
                     completed = "completed" if watched_value == "X" else ""
-                    if(item_name.endswith(FILE_TYPE)):
+                    if(item_name.endswith(self.file_types)):
                         self.tree.insert("", "end", text="", values=(item_name, "File", watched_value, "", ""), open=True, tags=completed)
         except PermissionError:
             pass
@@ -167,10 +231,6 @@ class FileExplorer:
         item = self.tree.identify_row(event.y)
         if not item:
             return
-        # if item not in self.tree.selection():
-        #     self.tree.selection_set(item)
-
-        # self.tree.selection_set(item)
         self.context_menu.post(event.x_root, event.y_root)
 
     def check_item(self):
@@ -179,13 +239,13 @@ class FileExplorer:
             item_path = os.path.join(self.current_folder, item_name)
             
             if item_type == "File":
-                if item_name.endswith(FILE_TYPE):
+                if item_name.endswith(self.file_types):
                     self.watched_items.add(item_path)
                     self.tree.set(item, column="Watched", value="X")
             elif item_type == "Folder":
                 for root, dirs, files in os.walk(item_path):
                     for file in files:
-                        if file.endswith(FILE_TYPE):
+                        if file.endswith(self.file_types):
                             file_path = os.path.join(root, file)
                             self.watched_items.add(file_path)
         
@@ -199,13 +259,13 @@ class FileExplorer:
             item_path = os.path.join(self.current_folder, item_name)
             
             if item_type == "File":
-                if item_name.endswith(FILE_TYPE):
+                if item_name.endswith(self.file_types):
                     self.watched_items.discard(item_path)
                     self.tree.set(item, column="Watched", value="")
             elif item_type == "Folder":
                 for root, dirs, files in os.walk(item_path):
                     for file in files:
-                        if file.endswith(FILE_TYPE):
+                        if file.endswith(self.file_types):
                             file_path = os.path.join(root, file)
                             self.watched_items.discard(file_path)
         self.save_watched_items()
