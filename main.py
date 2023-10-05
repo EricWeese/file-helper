@@ -76,10 +76,11 @@ class FileExplorer:
     def clear_file_types(self):
         try:
             self.file_types = (" ",)
-            with open(self.config, 'r') as file:
+            with open(self.config, 'a+') as file:
+                file.seek(0)
                 content = file.read()
             new_content = re.sub(r'fileTypes=\(.*\)', f'fileTypes=', content)
-            with open(self.config, 'w') as file:
+            with open(self.config, 'w+') as file:
                 file.write(new_content)
         except Exception as e:
                 print(f"Error: {e}")
@@ -90,9 +91,13 @@ class FileExplorer:
             new_file_type = new_file_type if new_file_type.startswith('.') else '.' + new_file_type
             self.file_types += (new_file_type,)
             try:
-                with open(self.config, 'r') as file:
+                with open(self.config, 'a+') as file:
+                    file.seek(0)
                     content = file.read()
-                new_content = re.sub(r'fileTypes=.*', f'fileTypes={self.file_types}', content)
+                if re.search(r'fileTypes', content):
+                    new_content = re.sub(r'fileTypes=.*', f'fileTypes={self.file_types}', content)
+                else: 
+                    new_content = content + (f'fileTypes={self.file_types}\n')
                 with open(self.config, 'w') as file:
                     file.write(new_content)
             except Exception as e:
@@ -122,11 +127,11 @@ class FileExplorer:
             if folder_selected == "":
                 raise 
             config_lines = []
-            with open(self.config, 'r') as file:
+            with open(self.config, 'a+') as file:
+                file.seek(0)
                 lines = file.readlines()
                 config_lines = [line for line in lines if not line.startswith("rootDirectory=")]
             config_lines.append(f"rootDirectory={folder_selected}\n")
-            print(config_lines)
             with open(self.config, 'w') as config_file:
                 config_file.writelines(config_lines)
         except:
@@ -138,7 +143,8 @@ class FileExplorer:
 
     def load_watched_items(self):
         if os.path.exists(self.watched_items_file):
-            with open(self.watched_items_file, 'r') as file:
+            with open(self.watched_items_file, 'a+') as file:
+                file.seek(0)
                 return set(file.read().splitlines())
         return set()
 
@@ -148,7 +154,8 @@ class FileExplorer:
 
     def read_file_types(self):
         try:
-            with open(self.config, 'r') as file:
+            with open(self.config, 'a+') as file:
+                file.seek(0)
                 for line in file.read().split("\n"):
                     if line.startswith("fileTypes="):
                         types = line.split("=")[1]
@@ -159,11 +166,11 @@ class FileExplorer:
             types = ()
         finally:
             self.file_types = tuple(types)
-            print(self.file_types)
 
     def read_root_folder(self):
         try:
-            with open(self.config, 'r') as file:
+            with open(self.config, 'a+') as file:
+                file.seek(0)
                 for line in file.read().split("\n"):
                     if line.startswith("rootDirectory"):
                         path = line.split("=")[1]
