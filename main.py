@@ -20,6 +20,13 @@ class FileExplorer:
         self.frame = ttk.Frame(self.root)
         self.frame.pack(fill="both", expand=True)
 
+        self.menu_bar = tk.Menu(self.root)
+        self.root.config(menu=self.menu_bar)
+
+        self.file_menu = tk.Menu(self.menu_bar, tearoff=0)
+        self.menu_bar.add_cascade(label="File", menu=self.file_menu)
+        self.file_menu.add_command(label="Set Root Directory", command=self.set_directory)
+
         self.back_button = ttk.Button(self.frame, text="Up Folder", command=self.navigate_up)
         self.back_button.pack(side="top",anchor="w")
 
@@ -54,7 +61,16 @@ class FileExplorer:
         self.checked_items_file = "checked_items.txt"
         self.checked_items = self.load_checked_items()
 
+        self.config = "config.txt"
+
         self.set_root_folder(FILE_PATH)
+    
+    def set_directory(self):
+        folder_selected = filedialog.askdirectory()
+        folder_selected = folder_selected.replace("/", "\\")
+        print(folder_selected)
+        with open('config.txt', 'w') as config_file:
+            config_file.write(f'rootDirectory=\"{folder_selected}\"')
 
     def load_checked_items(self):
         if os.path.exists(self.checked_items_file):
@@ -67,11 +83,8 @@ class FileExplorer:
             file.write('\n'.join(self.checked_items))
 
     def set_root_folder(self, path):
-        self.root_folder = path
-        self.current_folder = path
-        self.show_folder_contents(path)
-
-    def set_root_folder(self, path):
+        with open(self.config, 'r') as file:
+            path = file.read().split("\"")[1]
         self.root_folder = path
         self.current_folder = path
         self.show_folder_contents(path)
@@ -97,8 +110,10 @@ class FileExplorer:
                 checked_value = "X" if item_path in self.checked_items else ""
                 if os.path.isdir(item_path):
                     total_files, progress = self.calculate_progress(item_path)
+                    total_files = f"{total_files}"
                     progress = f"{progress:.2f}%"
-                    checked_value = "X" if self.calculate_progress(item_path) == 100.0 else ""
+                    checked_value = "X" if progress == "100.00%" else ""
+                    print(progress)
                     self.tree.insert("", "end", text="", values=(item_name, "Folder", checked_value, total_files, progress), open=True)
                 else:
                     if(item_name.endswith(FILE_TYPE)):
