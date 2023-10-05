@@ -105,7 +105,6 @@ class FileExplorer:
             # Sets default path to C:\Users\{current user}\Videos
             path = f"C:\\Users\\{getpass.getuser()}\\Videos"
         finally:
-            print(path)
             self.root_folder = path
             self.current_folder = path
             self.show_folder_contents(path)
@@ -158,45 +157,47 @@ class FileExplorer:
         item = self.tree.identify_row(event.y)
         if not item:
             return
+        # if item not in self.tree.selection():
+        #     self.tree.selection_set(item)
 
-        self.tree.selection_set(item)
+        # self.tree.selection_set(item)
         self.context_menu.post(event.x_root, event.y_root)
 
     def check_item(self):
-        item = self.tree.selection()[0]
-        item_name, item_type = self.tree.item(item, "values")[:2]
-        item_path = os.path.join(self.current_folder, item_name)
-        
-        if item_type == "File":
-            if item_name.endswith(FILE_TYPE):
-                self.watched_items.add(item_path)
-                self.tree.set(item, column="Watched", value="X")
-        elif item_type == "Folder":
-            for root, dirs, files in os.walk(item_path):
-                for file in files:
-                    if file.endswith(FILE_TYPE):
-                        file_path = os.path.join(root, file)
-                        self.watched_items.add(file_path)
+        for item in self.tree.selection():
+            item_name, item_type = self.tree.item(item, "values")[:2]
+            item_path = os.path.join(self.current_folder, item_name)
+            
+            if item_type == "File":
+                if item_name.endswith(FILE_TYPE):
+                    self.watched_items.add(item_path)
+                    self.tree.set(item, column="Watched", value="X")
+            elif item_type == "Folder":
+                for root, dirs, files in os.walk(item_path):
+                    for file in files:
+                        if file.endswith(FILE_TYPE):
+                            file_path = os.path.join(root, file)
+                            self.watched_items.add(file_path)
         
         self.save_watched_items()
         self.show_folder_contents(self.current_folder)  # Refresh the tree view to reflect changes
 
 
     def uncheck_item(self):
-        item = self.tree.selection()[0]
-        item_name, item_type = self.tree.item(item, "values")[:2]
-        item_path = os.path.join(self.current_folder, item_name)
-        
-        if item_type == "File":
-            if item_name.endswith(FILE_TYPE):
-                self.watched_items.discard(item_path)
-                self.tree.set(item, column="Watched", value="")
-        elif item_type == "Folder":
-            for root, dirs, files in os.walk(item_path):
-                for file in files:
-                    if file.endswith(FILE_TYPE):
-                        file_path = os.path.join(root, file)
-                        self.watched_items.discard(file_path)
+        for item in self.tree.selection():
+            item_name, item_type = self.tree.item(item, "values")[:2]
+            item_path = os.path.join(self.current_folder, item_name)
+            
+            if item_type == "File":
+                if item_name.endswith(FILE_TYPE):
+                    self.watched_items.discard(item_path)
+                    self.tree.set(item, column="Watched", value="")
+            elif item_type == "Folder":
+                for root, dirs, files in os.walk(item_path):
+                    for file in files:
+                        if file.endswith(FILE_TYPE):
+                            file_path = os.path.join(root, file)
+                            self.watched_items.discard(file_path)
         self.save_watched_items()
         self.show_folder_contents(self.current_folder)  # Refresh the tree view to reflect changes
 
