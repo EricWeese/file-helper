@@ -1,6 +1,0 @@
-C:\Users\eric.weese\Documents\Projects\Python Test\FileTracker\root\Test folder 2\TestSubFolder\text4.txt
-C:\Users\eric.weese\Documents\Projects\Python Test\FileTracker\root\Test folder 2\TestSubFolder\text6.txt
-C:\Users\eric.weese\Documents\Projects\Python Test\FileTracker\root\Test folder 2\text3.txt
-C:\Users\eric.weese\Documents\Projects\Python Test\FileTracker\root\Test folder 2\text2.txt
-C:\Users\eric.weese\Documents\Projects\Python Test\FileTracker\root\Test folder 2\TestSubFolder\text7.txt
-C:\Users\eric.weese\Documents\Projects\Python Test\FileTracker\root\Test folder 2\TestSubFolder\text5.txt
