@@ -1,2 +1,2 @@
-rootDirectory=C:\Users\eric.weese\Documents\Projects\Python Test\FileTracker\root
-fileTypes=('.txt',)
+rootDirectory=E:\Media
+fileTypes=('.mp4', '.mkv')

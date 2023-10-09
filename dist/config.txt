@@ -1,0 +1,2 @@
+fileTypes=('.mp4', '.mkv', '.m4v')
+rootDirectory=E:\Media
