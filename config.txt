@@ -1,2 +1,7 @@
+<<<<<<< HEAD
+fileTypes=('.txt', '.test')
+rootDirectory=C:\Users\eric.weese\Documents\Projects\Python Test\FileTracker\root
+=======
 rootDirectory=E:\Media
 fileTypes=('.mp4', '.mkv')
+>>>>>>> 6e6af4c59b21559c2afad78fb2c507b3efc18ea8

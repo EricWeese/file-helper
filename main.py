@@ -118,7 +118,7 @@ class FileExplorer:
         self.new_window = tk.Toplevel(self.root)
         self.new_window.title("Add File Type")
         
-        label = tk.Label(self.new_window, text="What file type would you like to add?\n(ex: py, .txt, mp4)")
+        label = tk.Label(self.new_window, text=f"What file type would you like to add?\nAlready added: {self.file_types}")
         label.pack(pady=10)
         
         self.file_type_entry = tk.Entry(self.new_window)
