@@ -155,7 +155,7 @@ class FileExplorer:
                 file.seek(0)
                 itemList = list(file.read().splitlines())
                 return itemList
-        return set()
+        return list()
 
     def save_watched_items(self):
         with open(self.watched_items_file, 'w') as file:
